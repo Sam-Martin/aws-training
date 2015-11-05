@@ -1,0 +1,538 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Builds a simple VPC with one public subnet and one private subnet.",
+	"Parameters" : {
+		"KeyName" : {
+			"Description" : "Name of an existing EC2 KeyPair",
+			"Type" : "String"
+		},
+		"EnabledVPCAZ" : {
+			"Description" : "Specify the AZ in which to create the network resources.",
+			"Type" : "String"
+		},
+		"SSHLocation" : {
+			"Description" : "Lockdown SSH location to a specific IP address (defaults to allowing SSH from any host)",
+			"Type" : "String",
+			"MinLength" : "9",
+			"MaxLength" : "18",
+			"Default" : "0.0.0.0/0",
+			"AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+			"ConstraintDescription" : "must be a valid CIDR range of the form x.x.x.x/x."
+		},
+		"PublicSubnet1CIDR" : {
+			"Description" : "CIDR block for our public subnet",
+			"Type" : "String",
+			"Default" : "10.50.1.0/24",
+			"AllowedPattern" : "[a-zA-Z0-9]+\\..+"
+		},
+		"PrivateSubnet1CIDR" : {
+			"Description" : "CIDR block for our private subnet",
+			"Type" : "String",
+			"Default" : "10.50.2.0/24",
+			"AllowedPattern" : "[a-zA-Z0-9]+\\..+"
+		},
+		"VPCCIDR" : {
+			"Description" : "CIDR Block for the entire VPC",
+			"Type" : "String",
+			"Default" : "10.50.0.0/16",
+			"AllowedPattern" : "[a-zA-Z0-9]+\\..+"
+		}
+	},
+	"Mappings" : {
+		"AWSInstanceType2Arch" : {
+			"c1.medium" : {
+				"Arch" : "64"
+			},
+			"c1.xlarge" : {
+				"Arch" : "64"
+			},
+			"cc1.4xlarge" : {
+				"Arch" : "64"
+			},
+			"m1.small" : {
+				"Arch" : "64"
+			},
+			"m1.medium" : {
+				"Arch" : "64"
+			},
+			"m1.large" : {
+				"Arch" : "64"
+			},
+			"m1.xlarge" : {
+				"Arch" : "64"
+			},
+			"m2.2xlarge" : {
+				"Arch" : "64"
+			},
+			"m2.4xlarge" : {
+				"Arch" : "64"
+			},
+			"m2.xlarge" : {
+				"Arch" : "64"
+			},
+			"t1.micro" : {
+				"Arch" : "64"
+			}
+		},
+		"AWSRegionArch2AMI" : {
+		 
+		    "us-west-1":  {
+		                      "64":  "ami-45332200"
+		                  },
+		    "ap-southeast-1":  {
+		                           "64":  "ami-e01f3db2"
+		                       },
+		    "ap-northeast-1":  {
+		                           "64":  "ami-8580ba84"
+		                       },
+		    "sa-east-1":  {
+		                      "64":  "ami-f501b7e8"
+		                  },
+		    "eu-west-1":  {
+		                      "64":  "ami-905fe9e7"
+		                  },
+		    "ap-southeast-2":  {
+		                           "64":  "ami-efa8c6d5"
+		                       },
+		    "us-west-2":  {
+		                      "64":  "ami-a13d6891"
+		                  },
+		    "us-east-1":  {
+		                      "64":  "ami-c49c0dac"
+		                  }
+		}
+
+		
+	},
+	"Resources" : {
+		"VPC" : {
+			"Type" : "AWS::EC2::VPC",
+			"Properties" : {
+				"CidrBlock" : {
+					"Ref" : "VPCCIDR"
+				},
+				"Tags" : [{
+						"Key" : "Application",
+						"Value" : {
+							"Ref" : "AWS::StackName"
+						}
+					}, {
+						"Key" : "Name",
+						"Value" : "CloudFormation VPC"
+					}, {
+						"Key" : "Network",
+						"Value" : "Public"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sysops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				]
+			}
+		},
+		"PublicSubnet1" : {
+			"Type" : "AWS::EC2::Subnet",
+			"DependsOn" : "VPC",
+			"Properties" : {
+				"VpcId" : {
+					"Ref" : "VPC"
+				},
+				"CidrBlock" : {
+					"Ref" : "PublicSubnet1CIDR"
+				},
+				"AvailabilityZone" : {
+					"Ref" : "EnabledVPCAZ"
+				},
+				"Tags" : [{
+						"Key" : "Application",
+						"Value" : {
+							"Ref" : "AWS::StackName"
+						}
+					}, {
+						"Key" : "Name",
+						"Value" : "Public Subnet - CF"
+					}, {
+						"Key" : "Network",
+						"Value" : "Public"
+					}, {
+						"Key" : "Role",
+						"Value" : "ELB 1 Subnet"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sys Ops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				]
+			}
+		},
+		"PrivateSubnet1" : {
+			"Type" : "AWS::EC2::Subnet",
+			"DependsOn" : "VPC",
+			"Properties" : {
+				"VpcId" : {
+					"Ref" : "VPC"
+				},
+				"CidrBlock" : {
+					"Ref" : "PrivateSubnet1CIDR"
+				},
+				"AvailabilityZone" : {
+					"Ref" : "EnabledVPCAZ"
+				},
+				"Tags" : [{
+						"Key" : "Application",
+						"Value" : {
+							"Ref" : "AWS::StackName"
+						}
+					}, {
+						"Key" : "Name",
+						"Value" : "Private Subnet - CF"
+					}, {
+						"Key" : "Network",
+						"Value" : "Private"
+					}, {
+						"Key" : "Role",
+						"Value" : "Application-Web Subnet"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sys Ops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				]
+			}
+		},
+		"InternetGateway" : {
+			"Type" : "AWS::EC2::InternetGateway",
+			"Properties" : {
+				"Tags" : [{
+						"Key" : "Application",
+						"Value" : {
+							"Ref" : "AWS::StackName"
+						}
+					}, {
+						"Key" : "Name",
+						"Value" : "Internet Gateway - CF"
+					}, {
+						"Key" : "Network",
+						"Value" : "Public"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sys Ops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				]
+			}
+		},
+		"AttachGateway" : {
+			"Type" : "AWS::EC2::VPCGatewayAttachment",
+			"DependsOn" : ["InternetGateway", "VPC"],
+			"Properties" : {
+				"VpcId" : {
+					"Ref" : "VPC"
+				},
+				"InternetGatewayId" : {
+					"Ref" : "InternetGateway"
+				}
+			}
+		},
+		"PublicRouteTable" : {
+			"Type" : "AWS::EC2::RouteTable",
+			"DependsOn" : "VPC",
+			"Properties" : {
+				"VpcId" : {
+					"Ref" : "VPC"
+				},
+				"Tags" : [{
+						"Key" : "Network",
+						"Value" : "Public"
+					}, {
+						"Key" : "Name",
+						"Value" : "Public Route Table - CF"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sys Ops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				]
+			}
+		},
+		"PublicRoute" : {
+			"Type" : "AWS::EC2::Route",
+			"DependsOn" : "AttachGateway",
+			"Properties" : {
+				"RouteTableId" : {
+					"Ref" : "PublicRouteTable"
+				},
+				"DestinationCidrBlock" : "0.0.0.0/0",
+				"GatewayId" : {
+					"Ref" : "InternetGateway"
+				}
+			}
+		},
+		"PublicSubnet1RouteTableAssociation" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"DependsOn" : "PublicRouteTable",
+			"Properties" : {
+				"SubnetId" : {
+					"Ref" : "PublicSubnet1"
+				},
+				"RouteTableId" : {
+					"Ref" : "PublicRouteTable"
+				}
+			}
+		},
+		"PrivateRouteTable" : {
+			"Type" : "AWS::EC2::RouteTable",
+			"DependsOn" : "VPC",
+			"Properties" : {
+				"VpcId" : {
+					"Ref" : "VPC"
+				},
+				"Tags" : [{
+						"Key" : "Network",
+						"Value" : "AZ1 Private"
+					}, {
+						"Key" : "Name",
+						"Value" : "Private Route Table - CF"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sys Ops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				]
+			}
+		},
+		"PrivateRouteAZ1" : {
+			"Type" : "AWS::EC2::Route",
+			"DependsOn" : ["PrivateRouteTable", "CommandHost"],
+			"Properties" : {
+				"RouteTableId" : {
+					"Ref" : "PrivateRouteTable"
+				},
+				"DestinationCidrBlock" : "0.0.0.0/0",
+				"InstanceId" : {
+					"Ref" : "CommandHost"
+				}
+			}
+		},
+		"PrivateSubnet1RouteTableAssociation" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"DependsOn" : "PrivateRouteTable",
+			"Properties" : {
+				"SubnetId" : {
+					"Ref" : "PrivateSubnet1"
+				},
+				"RouteTableId" : {
+					"Ref" : "PrivateRouteTable"
+				}
+			}
+		},
+		"CommandHost" : {
+			"Type" : "AWS::EC2::Instance",
+			"DependsOn" : ["PublicSubnet1", "VPC"],
+			"Properties" : {
+				"ImageId" : {
+					"Fn::FindInMap" : ["AWSRegionArch2AMI", {
+							"Ref" : "AWS::Region"
+						}, {
+							"Fn::FindInMap" : ["AWSInstanceType2Arch", "m1.small", "Arch"]
+						}
+					]
+				},
+				"InstanceType" : "m1.small",
+				"NetworkInterfaces" : [{
+						"DeviceIndex" : "0",
+						"AssociatePublicIpAddress" : "true",
+						"SubnetId" : {
+							"Ref" : "PublicSubnet1"
+						},
+						"GroupSet" : [{
+								"Ref" : "CommandHostSecurityGroup"
+							}
+						]
+					}
+				],
+				"UserData" : {
+					"Fn::Base64" : {
+						"Fn::Join" : ["", 
+							[
+								"<powershell>",
+								"Invoke-WebRequest https://s3-eu-west-1.amazonaws.com/toukakoukan.com/AWSCLI64.msi -outfile C:\\AWSCLI64.msi;\n",
+								"start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\AWSCLI64.msi','/quiet','/log','C:\\AWSCLI64.msi.log');\n",
+								"[Environment]::SetEnvironmentVariable('path', $env:path+';C:\\Program Files\\Amazon\\AWSCLI\\','MACHINE');\n",
+								"Invoke-WebRequest https://s3-eu-west-1.amazonaws.com/toukakoukan.com/curl-7.39.0-win64.msi -outfile C:\\curl-7.39.0-win64.msi;\n",
+								"start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\curl-7.39.0-win64.msi','/quiet','/log','C:\\curl-7.39.0-win64.msi.log');\n",
+								"$localInstanceAvailabilityZone = (invoke-webrequest 'http://169.254.169.254/latest/meta-data/placement/availability-zone').content;\n",
+								"$localRegion = $localInstanceAvailabilityZone.substring(0,$localInstanceAvailabilityZone.length-1);\n",
+								"new-item -type directory C:\\users\\administrator\\;\n",
+								"new-item -type directory C:\\users\\administrator\\.aws\\;\n",
+								"Set-content 'C:\\users\\administrator\\.aws\\config' $(\"[default]`r`noutput = text`r`naws_access_key_id = AKIAIN5PLBQOLGWHKHGA`r`naws_secret_access_key = 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`r`nregion =$localregion\");\n",
+								"</powershell>"
+							]
+						]
+					}
+				},
+				"Tags" : [{
+						"Key" : "Name",
+						"Value" : "CommandHost"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sys Ops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				],
+				"KeyName" : {
+					"Ref" : "KeyName"
+				},
+				"SourceDestCheck" : "false"
+			}
+		},
+		"StorageServer" : {
+			"Type" : "AWS::EC2::Instance",
+			"DependsOn" : ["PublicSubnet1", "VPC"],
+			"Properties" : {
+				"ImageId" : {
+					"Fn::FindInMap" : ["AWSRegionArch2AMI", {
+							"Ref" : "AWS::Region"
+						}, {
+							"Fn::FindInMap" : ["AWSInstanceType2Arch", "m1.small", "Arch"]
+						}
+					]
+				},
+				"InstanceType" : "m1.small",
+				"NetworkInterfaces" : [{
+						"DeviceIndex" : "0",
+						"AssociatePublicIpAddress" : "false",
+						"SubnetId" : {
+							"Ref" : "PrivateSubnet1"
+						},
+						"GroupSet" : [{
+								"Ref" : "StorageServerSecurityGroup"
+							}
+						]
+					}
+				],
+				"UserData" : {
+					"Fn::Base64" : {
+						"Fn::Join" : ["", 
+							[
+								"<powershell>",
+								"Invoke-WebRequest https://s3.amazonaws.com/aws-cli/AWSCLI64.msi -outfile C:\\AWSCLI64.msi;\n",
+								"start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\AWSCLI64.msi','/quiet','/log','C:\\AWSCLI64.msi.log')\n",
+								"[Environment]::SetEnvironmentVariable('path', $env:path+';C:\\Program Files\\Amazon\\AWSCLI\\','MACHINE')\n",
+								"Invoke-WebRequest https://s3-eu-west-1.amazonaws.com/toukakoukan.com/curl-7.39.0-win64.msi -outfile C:\\curl-7.39.0-win64.msi;\n",
+								"start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\curl-7.39.0-win64.msi','/quiet','/log','C:\\curl-7.39.0-win64.msi.log')",
+								"$localInstanceAvailabilityZone = (invoke-webrequest 'http://169.254.169.254/latest/meta-data/placement/availability-zone').content",
+								"$localRegion = $localInstanceAvailabilityZone.substring(0,$localInstanceAvailabilityZone.length-1);",
+								"new-item -type directory C:\\users\\administrator\\.aws\\",
+								"Set-content 'C:\\users\\administrator\\.aws\\config' $(\"[default]`r`noutput = text`r`naws_access_key_id = AKIAIN5PLBQOLGWHKHGA`r`naws_secret_access_key = 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`r`nregion =$localregion\")",
+								"</powershell>"
+							]
+						]
+					}
+				},
+				"Tags" : [{
+						"Key" : "Name",
+						"Value" : "STORAGE"
+					}, {
+						"Key" : "Department",
+						"Value" : "IT"
+					}, {
+						"Key" : "Project",
+						"Value" : "Sys Ops Training"
+					}, {
+						"Key" : "Cost Center",
+						"Value" : "4000"
+					}
+				],
+				"KeyName" : {
+					"Ref" : "KeyName"
+				}
+			}
+		},
+		"CommandHostSecurityGroup" : {
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties" : {
+				"GroupDescription" : "NAT for private subnets",
+				"VpcId" : {
+					"Ref" : "VPC"
+				},
+				"SecurityGroupIngress" : [{
+						"IpProtocol" : "-1",
+						"FromPort" : "1",
+						"ToPort" : "65535",
+						"CidrIp" : {
+							"Ref" : "PrivateSubnet1CIDR"
+						}
+					},
+					{
+						"IpProtocol": "tcp",
+						"FromPort": "3389",
+						"ToPort": "3389",
+						"CidrIp": "0.0.0.0/0"
+					
+					}
+				]
+			}
+		},
+		"StorageServerSecurityGroup" : {
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties" : {
+				"GroupDescription" : "NAT for private subnets",
+				"VpcId" : {
+					"Ref" : "VPC"
+				},
+				"SecurityGroupIngress" : [{
+						"IpProtocol" : "-1",
+						"FromPort" : "1",
+						"ToPort" : "65535",
+						"CidrIp" : {
+							"Ref" : "PrivateSubnet1CIDR"
+						}
+					},
+					{
+						"IpProtocol": "tcp",
+						"FromPort": "3389",
+						"ToPort": "3389",
+						"CidrIp": "0.0.0.0/0"
+					
+					}
+				]
+			}
+		}
+	}
+}
