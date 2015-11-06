@@ -10,15 +10,6 @@
             "Description": "Specify the AZ in which to create the network resources.",
             "Type": "String"
         },
-        "SSHLocation": {
-            "Description": "Lockdown SSH location to a specific IP address (defaults to allowing SSH from any host)",
-            "Type": "String",
-            "MinLength": "9",
-            "MaxLength": "18",
-            "Default": "0.0.0.0/0",
-            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
-        },
         "PublicSubnet1CIDR": {
             "Description": "CIDR block for our public subnet",
             "Type": "String",
@@ -402,7 +393,8 @@
             "Type": "AWS::EC2::Instance",
             "DependsOn": [
                 "PublicSubnet1",
-                "VPC"
+                "VPC",
+                "myaccesskey"
             ],
             "Properties": {
                 "ImageId": {
@@ -441,16 +433,34 @@
                             "",
                             [
                                 "<powershell>",
-                                "Invoke-WebRequest https://s3-eu-west-1.amazonaws.com/toukakoukan.com/AWSCLI64.msi -outfile C:\\AWSCLI64.msi;\n",
-                                "start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\AWSCLI64.msi','/quiet','/log','C:\\AWSCLI64.msi.log');\n",
+                                "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))\n",
+                                "cmd /c SET PATH=%PATH%`;%ALLUSERSPROFILE%\\chocolatey\\bin\n",
+                                "choco install awscli -y;choco install curl -y\n",
                                 "[Environment]::SetEnvironmentVariable('path', $env:path+';C:\\Program Files\\Amazon\\AWSCLI\\','MACHINE');\n",
-                                "Invoke-WebRequest https://s3-eu-west-1.amazonaws.com/toukakoukan.com/curl-7.39.0-win64.msi -outfile C:\\curl-7.39.0-win64.msi;\n",
-                                "start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\curl-7.39.0-win64.msi','/quiet','/log','C:\\curl-7.39.0-win64.msi.log');\n",
                                 "$localInstanceAvailabilityZone = (invoke-webrequest 'http://169.254.169.254/latest/meta-data/placement/availability-zone').content;\n",
                                 "$localRegion = $localInstanceAvailabilityZone.substring(0,$localInstanceAvailabilityZone.length-1);\n",
                                 "new-item -type directory C:\\users\\administrator\\;\n",
                                 "new-item -type directory C:\\users\\administrator\\.aws\\;\n",
-                                "Set-content 'C:\\users\\administrator\\.aws\\config' $(\"[default]`r`noutput = text`r`naws_access_key_id = AKIAIN5PLBQOLGWHKHGA`r`naws_secret_access_key = 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`r`nregion =$localregion\");\n",
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "Set-content 'C:\\users\\administrator\\.aws\\config' $(\"[default]`r`noutput = text`r`naws_access_key_id = ",
+                                            {
+                                                "Ref": "myaccesskey"
+                                            },
+                                            "`naws_secret_access_key = ",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "myaccesskey",
+                                                    "SecretAccessKey"
+                                                ]
+                                            },
+                                            "`r`nregion =$localregion\");\n"
+                                        ]
+                                        
+                                    ]
+                                },
                                 "</powershell>"
                             ]
                         ]
@@ -502,6 +512,55 @@
                         "ToPort": "3389",
                         "CidrIp": "0.0.0.0/0"
                     }
+                ]
+            }
+        },
+        "myuser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AdminAccess",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "*"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "myaccesskey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "myuser"
+                },
+                "Status": "Active"
+            }
+        }
+    },
+    "Outputs": {
+        "AccessKeyformyaccesskey": {
+            "Value": {
+                "Ref": "myaccesskey"
+            }
+        },
+        "SecretKeyformyaccesskey": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "myaccesskey",
+                    "SecretAccessKey"
                 ]
             }
         }
