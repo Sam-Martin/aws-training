@@ -4,15 +4,15 @@
 	"Parameters" : {
 		"KeyName" : {
 			"Description" : "Name of an existing EC2 KeyPair",
-			"Type" : "String"
+			"Type" : "AWS::EC2::KeyPair::KeyName"
 		},
 		"EnabledVPCAZ01" : {
 			"Description" : "Specify the AZ in which to create the network resources.",
-			"Type" : "String"
+			"Type" : "AWS::EC2::AvailabilityZone::Name"
 		},
 		"EnabledVPCAZ02" : {
 			"Description" : "Specify the AZ in which to create the network resources.",
-			"Type" : "String"
+			"Type" : "AWS::EC2::AvailabilityZone::Name"
 		},
 		"SSHLocation" : {
 			"Description" : "Lockdown SSH location to a specific IP address (defaults to allowing SSH from any host)",
@@ -78,35 +78,35 @@
 				"Arch" : "64"
 			}
 		},
-		"AWSRegionArch2AMI" : {
-		 
-		    "us-west-1":  {
-		                      "64":  "ami-45332200"
-		                  },
-		    "ap-southeast-1":  {
-		                           "64":  "ami-e01f3db2"
-		                       },
-		    "ap-northeast-1":  {
-		                           "64":  "ami-8580ba84"
-		                       },
-		    "sa-east-1":  {
-		                      "64":  "ami-f501b7e8"
-		                  },
-		    "eu-west-1":  {
-		                      "64":  "ami-905fe9e7"
-		                  },
-		    "ap-southeast-2":  {
-		                           "64":  "ami-efa8c6d5"
-		                       },
-		    "us-west-2":  {
-		                      "64":  "ami-a13d6891"
-		                  },
-		    "us-east-1":  {
-		                      "64":  "ami-c49c0dac"
-		                  }
-		}
-
-		
+		"AWSRegionArch2AMI": {
+            "us-west-1": {
+                "64": "ami-91f93ad5"
+            },
+            "ap-northeast-1": {
+                "64": "ami-3e93fe3e"
+            },
+            "us-east-1": {
+                "64": "ami-1df0ac78"
+            },
+            "eu-central-1": {
+                "64": "ami-76828f6b"
+            },
+            "ap-southeast-1": {
+                "64": "ami-34667666"
+            },
+            "eu-west-1": {
+                "64": "ami-2fcbf458"
+            },
+            "ap-southeast-2": {
+                "64": "ami-7bda9041"
+            },
+            "us-west-2": {
+                "64": "ami-8aa746b9"
+            },
+            "sa-east-1": {
+                "64": "ami-02952d6e"
+            }
+        }		
 	},
 	"Resources" : {
 		"VPC" : {
@@ -385,32 +385,46 @@
 						]
 					}
 				],
-				"UserData" : {
-					"Fn::Base64" : {
-						"Fn::Join" : ["", 
-							[
-								"<powershell>",
-								"Invoke-WebRequest https://s3.amazonaws.com/aws-cli/AWSCLI64.msi -outfile C:\\AWSCLI64.msi;\n",
-								"start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\AWSCLI64.msi','/quiet','/log','C:\\AWSCLI64.msi.log');\n",
-								"[Environment]::SetEnvironmentVariable('path', $env:path+';C:\\Program Files\\Amazon\\AWSCLI\\','MACHINE');\n",
-								"Invoke-WebRequest https://www.python.org/ftp/python/3.4.2/python-3.4.2.msi -outfile C:\\python-3.4.2.msi;\n",
-								"start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\python-3.4.2.msi','/quiet','/log','C:\\python-3.4.2.msi.log');\n",
-								"[Environment]::SetEnvironmentVariable('path', $env:path+';C:\\Python34\\','MACHINE');\n",
-								"start -Wait -FilePath 'C:\\Python34\\Scripts\\pip.exe' -ArgumentList @('install awscli --upgrade');\n",
-								"Invoke-WebRequest https://s3-eu-west-1.amazonaws.com/toukakoukan.com/curl-7.39.0-win64.msi -outfile C:\\curl-7.39.0-win64.msi;\n",
-								"start -Wait -FilePath 'C:\\Windows\\system32\\msiexec.exe' -ArgumentList @('-i', 'C:\\curl-7.39.0-win64.msi','/quiet','/log','C:\\curl-7.39.0-win64.msi.log');\n",
-								"$localInstanceAvailabilityZone = (invoke-webrequest 'http://169.254.169.254/latest/meta-data/placement/availability-zone').content;\n",
-								"$localRegion = $localInstanceAvailabilityZone.substring(0,$localInstanceAvailabilityZone.length-1);\n",
-								"new-item -type directory C:\\AWS\\;\n",
-								"Invoke-WebRequest https://s3-eu-west-1.amazonaws.com/lab9files/UserData.txt -outfile C:\\AWS\\UserData.txt;\n",
-								"new-item -type directory C:\\users\\administrator\\;\n",
-								"new-item -type directory C:\\users\\administrator\\.aws\\;\n",
-								"Set-content 'C:\\users\\administrator\\.aws\\config' $(\"[default]`r`noutput = text`r`naws_access_key_id = AKIAIN5PLBQOLGWHKHGA`r`naws_secret_access_key = 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`r`nregion =$localregion\");\n",
-								"</powershell>"
-							]
-						]
-					}
-				},
+				"UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "<powershell>",
+                                "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))\n",
+                                "cmd /c SET PATH=%PATH%`;%ALLUSERSPROFILE%\\chocolatey\\bin\n",
+                                "choco install awscli -y;choco install curl -y;choco install python -y\n",
+                                "[Environment]::SetEnvironmentVariable('path', $env:path+';C:\\Python34\\','MACHINE');\n",
+                                "[Environment]::SetEnvironmentVariable('path', $env:path+';C:\\Program Files\\Amazon\\AWSCLI\\','MACHINE');\n",
+                                "$localInstanceAvailabilityZone = (invoke-webrequest 'http://169.254.169.254/latest/meta-data/placement/availability-zone').content;\n",
+                                "$localRegion = $localInstanceAvailabilityZone.substring(0,$localInstanceAvailabilityZone.length-1);\n",
+                                "new-item -type directory C:\\users\\administrator\\;\n",
+                                "new-item -type directory C:\\users\\administrator\\.aws\\;\n",
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "Set-content 'C:\\users\\administrator\\.aws\\config' $(\"[default]`r`noutput = text`r`naws_access_key_id = ",
+                                            {
+                                                "Ref": "myaccesskey"
+                                            },
+                                            "`naws_secret_access_key = ",
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "myaccesskey",
+                                                    "SecretAccessKey"
+                                                ]
+                                            },
+                                            "`r`nregion =$localregion\");\n"
+                                        ]
+                                    ]
+                                },
+                                "Invoke-WebRequest https://raw.githubusercontent.com/Sam-Martin/aws-training/master/lab9files/UserData.txt -outfile C:\\AWS\\UserData.txt;\n",
+                                "</powershell>"
+                            ]
+                        ]
+                    }
+                },
 				"Tags" : [{
 						"Key" : "Name",
 						"Value" : "Bastion"
@@ -462,6 +476,55 @@
 					}
 				]
 			}
-		}
-	}
+		},
+		"myuser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "AdminAccess",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "*"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+	 	"myaccesskey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "myuser"
+                },
+                "Status": "Active"
+            }
+        }
+    },
+    "Outputs": {
+        "AccessKeyformyaccesskey": {
+            "Value": {
+                "Ref": "myaccesskey"
+            }
+        },
+        "SecretKeyformyaccesskey": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "myaccesskey",
+                    "SecretAccessKey"
+                ]
+            }
+        }
+    }
 }

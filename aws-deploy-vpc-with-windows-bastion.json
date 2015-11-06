@@ -4,11 +4,11 @@
     "Parameters": {
         "KeyName": {
             "Description": "Name of an existing EC2 KeyPair",
-            "Type": "String"
+            "Type": "AWS::EC2::KeyPair::KeyName"
         },
         "EnabledVPCAZ": {
             "Description": "Specify the AZ in which to create the network resources.",
-            "Type": "String"
+            "Type": "AWS::EC2::AvailabilityZone::Name"
         },
         "PublicSubnet1CIDR": {
             "Description": "CIDR block for our public subnet",
