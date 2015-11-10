@@ -419,7 +419,7 @@
                                         ]
                                     ]
                                 },
-                                "Invoke-WebRequest https://raw.githubusercontent.com/Sam-Martin/aws-training/master/lab9files/UserData.txt -outfile C:\\AWS\\UserData.txt;\n",
+                                "New-Item -Path C:\\aws\\ -ItemType container;Invoke-WebRequest https://raw.githubusercontent.com/Sam-Martin/aws-training/master/lab9files/UserData.txt -outfile C:\\AWS\\UserData.txt;\n",
                                 "</powershell>"
                             ]
                         ]
