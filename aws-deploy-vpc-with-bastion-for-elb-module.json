@@ -29,6 +29,12 @@
 			"Default" : "10.50.1.0/24",
 			"AllowedPattern" : "[a-zA-Z0-9]+\\..+"
 		},
+        "PublicSubnet2CIDR" : {
+            "Description" : "CIDR block for our public subnet",
+            "Type" : "String",
+            "Default" : "10.50.3.0/24",
+            "AllowedPattern" : "[a-zA-Z0-9]+\\..+"
+        },
 		"PrivateSubnet1CIDR" : {
 			"Description" : "CIDR block for our private subnet #1",
 			"Type" : "String",
@@ -159,7 +165,7 @@
 						}
 					}, {
 						"Key" : "Name",
-						"Value" : "Public Subnet - CF"
+						"Value" : "Public Subnet #1 - CF"
 					}, {
 						"Key" : "Network",
 						"Value" : "Public"
@@ -179,6 +185,46 @@
 				]
 			}
 		},
+        "PublicSubnet2" : {
+            "Type" : "AWS::EC2::Subnet",
+            "DependsOn" : "VPC",
+            "Properties" : {
+                "VpcId" : {
+                    "Ref" : "VPC"
+                },
+                "CidrBlock" : {
+                    "Ref" : "PublicSubnet2CIDR"
+                },
+                "AvailabilityZone" : {
+                    "Ref" : "EnabledVPCAZ02"
+                },
+                "Tags" : [{
+                        "Key" : "Application",
+                        "Value" : {
+                            "Ref" : "AWS::StackName"
+                        }
+                    }, {
+                        "Key" : "Name",
+                        "Value" : "Public Subnet #2 - CF"
+                    }, {
+                        "Key" : "Network",
+                        "Value" : "Public"
+                    }, {
+                        "Key" : "Role",
+                        "Value" : "ELB 1 Subnet"
+                    }, {
+                        "Key" : "Department",
+                        "Value" : "IT"
+                    }, {
+                        "Key" : "Project",
+                        "Value" : "Sys Ops Training"
+                    }, {
+                        "Key" : "Cost Center",
+                        "Value" : "4000"
+                    }
+                ]
+            }
+        },
 		"PrivateSubnet1" : {
 			"Type" : "AWS::EC2::Subnet",
 			"DependsOn" : "VPC",
