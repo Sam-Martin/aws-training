@@ -4,5 +4,6 @@ Add-WindowsFeature Web-Server -IncludeAllSubfeature
 Invoke-WebRequest https://raw.githubusercontent.com/Sam-Martin/aws-training/master/lab9files/Default.htm -outfile C:\inetpub\wwwroot\Default.htm
 Invoke-WebRequest https://raw.githubusercontent.com/Sam-Martin/aws-training/master/lab9files/SDL+Logo+White.jpg -outfile "C:\inetpub\wwwroot\SDL Logo White.jpg"
 Invoke-WebRequest https://raw.githubusercontent.com/Sam-Martin/aws-training/master/lab9files/construction_sign.gif -outfile C:\inetpub\wwwroot\construction_sign.gif
+New-Item -Path C:\\aws\\ -ItemType container;
 Invoke-WebRequest https://raw.githubusercontent.com/Sam-Martin/aws-training/master/lab9files/cpuload.bat -outfile C:\AWS\cpuload.bat
 </powershell>

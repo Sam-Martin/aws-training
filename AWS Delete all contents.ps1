@@ -1,8 +1,8 @@
-﻿# Get the account ID
+﻿#
 (Get-IAMUser | select -first 1 | select -ExpandProperty arn) -match ':\d+:'
 [int64]$accountID = $matches[0] -replace ':',''
 
-if($accountID -ne $(read-host "Confirm the account ID you wish to delete the contents of."){
+if($accountID -ne $(read-host "Confirm the ID of the account of which you wish to delete the contents")){
     throw "STOP OH GOD ITS THE WRONG ACCOUNT, it's $accountID"
 }
 
@@ -13,6 +13,7 @@ foreach($region in Get-AWSRegion){
 
 
     Write-Host "Terminating EC2 Instances"
+    (Get-EC2Instance).Instances | ?{$_.instanceid} | %{ Edit-EC2InstanceAttribute -Attribute DisableApiTermination -Value $false -InstanceId $_.InstanceId}
     Get-EC2Instance | Stop-EC2Instance -Terminate -Force
 
     $filter = New-Object Amazon.EC2.Model.Filter -Property @{Name = "platform"; Values = $platform_values}
@@ -68,6 +69,6 @@ foreach($region in Get-AWSRegion){
     Get-ASLaunchConfiguration | %{$_ | Remove-ASLaunchConfiguration -Force}
 
     Write-Host "Delete S3 Buckets"
-    Get-S3Bucket | %{$_ | Remove-S3Bucket -Force}
+    Get-S3Bucket -Region $region.Region | %{$_ | Remove-S3Bucket -Force}
 }
     
